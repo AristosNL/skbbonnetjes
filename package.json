@@ -1,12 +1,24 @@
 {
-  "name": "bonnen-extractie",
+  "name": "skbbonnetjes",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "engines": { "node": ">=18" },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",
     "exceljs": "^4.4.0",
     "googleapis": "^144.0.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.0"
   }
 }
