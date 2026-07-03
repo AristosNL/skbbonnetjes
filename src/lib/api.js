@@ -6,7 +6,7 @@ async function post(path, body) {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   });
   const j = await res.json();
-  if (!j.ok) throw new Error(j.error || 'Er ging iets mis.');
+  if (!j.ok) { const e = new Error(j.error || 'Er ging iets mis.'); e.duplicate = !!j.duplicate; throw e; }
   return j;
 }
 
@@ -16,6 +16,7 @@ export const login = (password) => post('login', { password });
 export const logout = () => fetch(F('logout'), { method: 'POST' });
 export const checkAuth = () => fetch(F('me')).then((r) => r.ok);
 export const exportUrl = (year) => F(`export-xlsx?year=${year}`);
+export const resetData = () => post('reset-data', { confirm: 'VERWIJDER' });
 
 let _cache = null;
 export async function getReceipts(force = false) {
@@ -50,14 +51,31 @@ export async function toResizedBase64(file, max = 1600, quality = 0.8) {
   return { image_base64, media_type: 'image/jpeg', preview: URL.createObjectURL(blob) };
 }
 
+const isPdf = (file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+// Afbeeldingen worden verkleind; PDF's gaan ongewijzigd als document mee.
+export async function filePayload(file) {
+  if (isPdf(file)) {
+    const b64 = await new Promise((r) => {
+      const fr = new FileReader();
+      fr.onload = () => r(fr.result.split(',')[1]);
+      fr.readAsDataURL(file);
+    });
+    return { image_base64: b64, media_type: 'application/pdf', preview: null, isPdf: true, name: file.name };
+  }
+  return { ...(await toResizedBase64(file)), isPdf: false, name: file.name };
+}
+
 export const CATEGORIES = {
-  kantoorbenodigdheden: true,
-  'software/abonnementen': true,
-  reiskosten: true,
-  brandstof: true,
-  horeca: false,
-  representatie: 'beperkt',
-  hardware: true,
-  overig: true,
+  kantoorbenodigdheden: null,
+  'software/abonnementen': null,
+  reiskosten: null,
+  brandstof: null,
+  horeca: null,
+  representatie: null,
+  hardware: null,
+  overig: null,
 };
-export const AFTREK_TXT = { true: 'ja', false: 'nee', beperkt: 'beperkt' };
+// Vrijgestelde bv: voorbelasting niet aftrekbaar (btw = kostprijs).
+export const VAT_DEDUCTIBLE = false;
+export const btwAftrekbaar = () => VAT_DEDUCTIBLE;
