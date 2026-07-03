@@ -1,0 +1,12 @@
+{
+  "name": "bonnen-extractie",
+  "version": "0.1.0",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "exceljs": "^4.4.0",
+    "googleapis": "^144.0.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
