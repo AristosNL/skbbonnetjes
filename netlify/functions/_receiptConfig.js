@@ -2,20 +2,27 @@
 // Gedeelde configuratie voor bon-extractie. Underscore-prefix => wordt door
 // Netlify NIET als eigen function gedeployed, alleen geïmporteerd.
 
+// Deze bv verricht btw-vrijgestelde (medische) prestaties: voorbelasting is
+// niet aftrekbaar, de btw is kostprijsverhogend. Zet op true als het ooit een
+// btw-belaste onderneming wordt.
+const VAT_DEDUCTIBLE = false;
+
 // --- Categorieën (vaste lijst; LLM kiest hieruit, geen vrije tekst) ---
-// btw_aftrekbaar bepaalt of de btw meetelt in de aangifte.
-// LET OP: verifieer actuele regels/drempels (o.a. BUA voor representatie,
-// horeca-btw eten/drinken ter plaatse) voor de betreffende jaargang.
 const CATEGORIES = {
-  kantoorbenodigdheden:    { btw_aftrekbaar: true },
-  'software/abonnementen': { btw_aftrekbaar: true },
-  reiskosten:              { btw_aftrekbaar: true },
-  brandstof:               { btw_aftrekbaar: true },
-  horeca:                  { btw_aftrekbaar: false },     // eten/drinken ter plaatse
-  representatie:           { btw_aftrekbaar: 'beperkt' }, // BUA-drempel
-  hardware:                { btw_aftrekbaar: true },
-  overig:                  { btw_aftrekbaar: true },
+  kantoorbenodigdheden:    {},
+  'software/abonnementen': {},
+  reiskosten:              {},
+  brandstof:               {},
+  horeca:                  {},
+  representatie:           {},
+  hardware:                {},
+  overig:                  {},
 };
+
+// Aftrekbaarheid van de btw: bij een vrijgestelde bv altijd 'nee'.
+function aftrekbaar() {
+  return VAT_DEDUCTIBLE ? true : false;
+}
 
 // --- Systeemprompt ---
 const SYSTEM_PROMPT = `Je bent een assistent die Nederlandse (en soms Engelstalige) kassabonnen en factuurbonnetjes uitleest voor een zakelijke boekhouding. Je krijgt één afbeelding van een bon. Haal de gegevens eruit en roep de tool record_receipt aan.
@@ -100,10 +107,10 @@ function enrich(d) {
   const issues = validate(d);
   return {
     ...d,
-    btw_aftrekbaar: CATEGORIES[d.categorie]?.btw_aftrekbaar ?? null,
+    btw_aftrekbaar: aftrekbaar(),
     validation_issues: issues,
     needs_review: issues.length > 0 || d.leesbaarheid === 'slecht',
   };
 }
 
-module.exports = { CATEGORIES, SYSTEM_PROMPT, RECEIPT_TOOL, validate, enrich };
+module.exports = { CATEGORIES, SYSTEM_PROMPT, RECEIPT_TOOL, validate, enrich, VAT_DEDUCTIBLE };

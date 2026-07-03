@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import Icon from '../lib/icons.jsx';
 import {
   extractReceipt, saveReceipt, invalidateReceipts,
-  toResizedBase64, fmtEur, CATEGORIES, AFTREK_TXT,
+  filePayload, fmtEur, CATEGORIES, btwAftrekbaar,
 } from '../lib/api.js';
 
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
@@ -25,7 +25,7 @@ const buildPayload = (d) => ({
   leverancier: d.leverancier, datum: d.datum, valuta: d.valuta || 'EUR',
   btw_regels: d.btw_regels || [], bedrag_excl_btw: d.bedrag_excl_btw, btw_totaal: d.btw_totaal,
   bedrag_incl_btw: d.bedrag_incl_btw, categorie: d.categorie, leesbaarheid: d.leesbaarheid || 'goed',
-  btw_aftrekbaar: CATEGORIES[d.categorie], needs_review: d.needs_review,
+  btw_aftrekbaar: btwAftrekbaar(), needs_review: d.needs_review,
 });
 
 export default function ScanView() {
@@ -62,7 +62,7 @@ function Single() {
     const file = e.target.files?.[0];
     if (!file) return;
     setError(''); setResult(null);
-    const pic = await toResizedBase64(file);
+    const pic = await filePayload(file);
     setImg(pic); setPhase('extracting');
     try {
       const { data } = await extractReceipt(pic.image_base64, pic.media_type);
@@ -95,7 +95,7 @@ function Single() {
           <label className="btn" style={{ cursor: 'pointer' }}>
             <Icon name="camera" size={18} />
             {phase === 'extracting' ? 'Uitlezen…' : 'Bon kiezen'}
-            <input type="file" accept="image/*" capture="environment" onChange={onFile} disabled={phase === 'extracting'} style={{ display: 'none' }} />
+            <input type="file" accept="image/*,application/pdf" capture="environment" onChange={onFile} disabled={phase === 'extracting'} style={{ display: 'none' }} />
           </label>
           <p className="page-sub" style={{ marginTop: 14 }}>JPEG, PNG of WebP</p>
         </div>
@@ -111,7 +111,8 @@ function Single() {
 
       {form && (phase === 'review' || phase === 'saving') && (
         <div className="card">
-          {img?.preview && <img src={img.preview} alt="bon" style={{ maxWidth: '100%', borderRadius: 12, marginBottom: 16 }} />}
+          {img?.preview && !img.isPdf && <img src={img.preview} alt="bon" style={{ maxWidth: '100%', borderRadius: 12, marginBottom: 16 }} />}
+          {img?.isPdf && <div className="panel" style={{ marginBottom: 16 }}><Icon name="receipt" size={16} /> {img.name} <span style={{ color: 'var(--muted)', fontSize: 12 }}>· PDF</span></div>}
           {needsReview && <div className="alert warn"><Icon name="alert" size={15} /> Controleer even — {issues.length ? issues.join('; ') : 'bon slecht leesbaar'}.</div>}
 
           <div className="field"><label>Leverancier</label><input className="input" value={form.leverancier || ''} onChange={(e) => set('leverancier', e.target.value)} /></div>
@@ -122,7 +123,7 @@ function Single() {
               {Object.keys(CATEGORIES).map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <div className="field"><label /><span style={{ fontSize: 12, color: 'var(--muted)' }}>btw aftrekbaar: {AFTREK_TXT[String(CATEGORIES[form.categorie])] ?? '—'}</span></div>
+          <div className="field"><label /><span style={{ fontSize: 12, color: 'var(--muted)' }}>Btw niet aftrekbaar (vrijgestelde prestaties) — telt als kostprijs.</span></div>
 
           <div style={{ margin: '14px 0 8px', fontSize: 13, color: 'var(--muted)', fontWeight: 500 }}>Btw-regels</div>
           {form.btw_regels.map((r, i) => (
@@ -155,7 +156,7 @@ function Single() {
 
 const STATUS = {
   wacht: ['mute', 'wacht'], bezig: ['warn', 'bezig…'], klaar: ['ok', 'uitgelezen'],
-  opslaan: ['warn', 'opslaan…'], opgeslagen: ['ok', 'opgeslagen'], fout: ['err', 'fout'],
+  opslaan: ['warn', 'opslaan…'], opgeslagen: ['ok', 'opgeslagen'], duplicaat: ['warn', 'al ingeladen'], fout: ['err', 'fout'],
 };
 
 function Batch() {
@@ -174,7 +175,7 @@ function Batch() {
     for (let i = 0; i < files.length; i += 1) {
       patch(i, { status: 'bezig' });
       try {
-        const pic = await toResizedBase64(files[i]);
+        const pic = await filePayload(files[i]);
         const { data } = await extractReceipt(pic.image_base64, pic.media_type);
         if (autoSave) {
           patch(i, { status: 'opslaan', data, img: pic });
@@ -183,7 +184,7 @@ function Batch() {
         } else {
           patch(i, { status: 'klaar', data, img: pic });
         }
-      } catch (err) { patch(i, { status: 'fout', error: err.message }); }
+      } catch (err) { patch(i, { status: err.duplicate ? 'duplicaat' : 'fout', error: err.message }); }
     }
     if (saved) invalidateReceipts();
     setRunning(false);
@@ -193,7 +194,7 @@ function Batch() {
     if (!row.data) return;
     patch(i, { status: 'opslaan' });
     try { const r = await saveReceipt(buildPayload(row.data), row.img.image_base64, row.img.media_type); invalidateReceipts(); patch(i, { status: 'opgeslagen', link: r.bon_link }); }
-    catch (err) { patch(i, { status: 'fout', error: err.message }); }
+    catch (err) { patch(i, { status: err.duplicate ? 'duplicaat' : 'fout', error: err.message }); }
   }, []);
 
   const saveAll = useCallback(async () => {
@@ -210,7 +211,7 @@ function Batch() {
           <label className="btn" style={{ cursor: 'pointer' }}>
             <Icon name="camera" size={18} />
             {running ? `Verwerken… ${done}/${batch.length}` : 'Bestanden kiezen'}
-            <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={onFiles} disabled={running} style={{ display: 'none' }} />
+            <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple onChange={onFiles} disabled={running} style={{ display: 'none' }} />
           </label>
           <label className="check"><input type="checkbox" checked={autoSave} onChange={(e) => setAutoSave(e.target.checked)} disabled={running} /> Direct opslaan in Drive</label>
           {savable && !running && <button className="btn-ghost" onClick={saveAll}>Rest opslaan</button>}

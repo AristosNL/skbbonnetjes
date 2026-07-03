@@ -3,7 +3,7 @@
 //   data = geverifieerde output van extract-receipt
 // -> uploadt de bon naar Bonnen/JJJJ/MM en voegt een regel toe aan het overzicht.
 
-const { clients, ensureFolderPath, uploadImage, ensureSheet, appendRow } = require('./_google');
+const { clients, ensureFolderPath, uploadImage, ensureSheet, appendRow, readSheet } = require('./_google');
 const { verify } = require('./_auth');
 
 const CORS = {
@@ -16,6 +16,8 @@ const reply = (statusCode, obj) => ({ statusCode, headers: CORS, body: JSON.stri
 
 const AFTREK_TXT = { true: 'ja', false: 'nee', beperkt: 'beperkt' };
 const clean = (s) => String(s || '').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 60);
+// Inhoudssleutel voor dedup: datum | leverancier | incl-bedrag.
+const dupKey = (datum, leverancier, incl) => `${String(datum).trim()}|${String(leverancier).trim().toLowerCase()}|${Number(incl).toFixed(2)}`;
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: CORS, body: '' };
@@ -36,13 +38,23 @@ exports.handler = async (event) => {
 
   try {
     const { drive, sheets } = clients();
+    const sheetId = await ensureSheet(drive, sheets);
 
-    const ext = media_type === 'image/png' ? 'png' : media_type === 'image/webp' ? 'webp' : 'jpg';
+    // Duplicaatcontrole op datum + leverancier + incl-bedrag.
+    const bestaande = await readSheet(sheets, sheetId);
+    const key = dupKey(data.datum, data.leverancier, data.bedrag_incl_btw);
+    const isDup = bestaande.some((r) => r[0] && dupKey(r[0], r[1], r[5]) === key);
+    if (isDup) {
+      return reply(409, { ok: false, duplicate: true, error: 'Deze bon is al ingeladen (zelfde datum, leverancier en bedrag).' });
+    }
+
+    const ext = media_type === 'application/pdf' ? 'pdf'
+      : media_type === 'image/png' ? 'png'
+        : media_type === 'image/webp' ? 'webp' : 'jpg';
     const bestandsnaam = `${clean(data.datum)}_${clean(data.leverancier)}_${data.bedrag_incl_btw}.${ext}`;
 
     const folderId = await ensureFolderPath(drive, data.datum);
     const file = await uploadImage(drive, folderId, bestandsnaam, media_type, image_base64);
-    const sheetId = await ensureSheet(drive, sheets);
 
     const row = [
       data.datum,

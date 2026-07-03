@@ -94,4 +94,19 @@ async function readSheet(sheets, sheetId, range = 'A2:J') {
   return data.values || [];
 }
 
-module.exports = { clients, ensureFolderPath, uploadImage, ensureSheet, appendRow, readSheet };
+// Alles wissen: Bonnen-map en het overzichtsbestand naar de prullenbak (herstelbaar).
+// Bij een volgende scan worden map + bestand automatisch opnieuw aangemaakt.
+async function resetAll(drive) {
+  const trashByQuery = async (q) => {
+    const { data } = await drive.files.list({ q, fields: 'files(id)', pageSize: 10 });
+    for (const f of data.files) {
+      await drive.files.update({ fileId: f.id, requestBody: { trashed: true } });
+    }
+    return data.files.length;
+  };
+  const folders = await trashByQuery(`name='${esc(ROOT_FOLDER)}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const sheetsN = await trashByQuery(`name='${esc(SHEET_NAME)}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`);
+  return { folders, sheets: sheetsN };
+}
+
+module.exports = { clients, ensureFolderPath, uploadImage, ensureSheet, appendRow, readSheet, resetAll };

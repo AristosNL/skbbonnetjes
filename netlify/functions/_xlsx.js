@@ -70,22 +70,12 @@ function buildWorkbook(rows, year) {
   ['C', 'D', 'E'].forEach((c) => money(sum, `${c}${r}`));
   sum.getRow(r).font = { ...FONT, bold: true };
 
-  // Btw-aftrekbaarheid
+  // Btw is niet aftrekbaar (vrijgestelde prestaties) -> kostprijsverhogend.
   r += 2;
-  sum.getRow(r).values = ['Btw-aftrekbaarheid', 'Btw'];
-  styleHeader(sum.getRow(r));
-  const aStart = r + 1;
-  [['Aftrekbaar', 'ja'], ['Niet aftrekbaar', 'nee'], ['Beperkt (BUA)', 'beperkt']].forEach(([label, key]) => {
-    r += 1;
-    sum.getCell(`A${r}`).value = label;
-    sum.getCell(`B${r}`).value = { formula: `SUMIF(${G},"${key}",${E})` };
-    money(sum, `B${r}`);
-  });
-  r += 1;
-  sum.getCell(`A${r}`).value = 'Controle (= totaal btw)';
-  sum.getCell(`B${r}`).value = { formula: `SUM(B${aStart}:B${r - 1})` };
+  sum.getCell(`A${r}`).value = 'Btw (niet aftrekbaar, kostprijs)';
+  sum.getCell(`B${r}`).value = { formula: `SUM(${E})` };
   money(sum, `B${r}`);
-  sum.getRow(r).font = { ...FONT, italic: true };
+  sum.getRow(r).font = { ...FONT, bold: true };
 
   // Per maand (SUMPRODUCT op de datumtekst, geen hulpkolom)
   r += 2;

@@ -22,8 +22,8 @@ export default function OverzichtView() {
 
   const kpi = useMemo(() => {
     const sum = (f) => rows.reduce((a, x) => a + x[f], 0);
-    const aftrek = rows.filter((x) => x.aftrekbaar === 'ja').reduce((a, x) => a + x.btw, 0);
-    return { aantal: rows.length, incl: sum('incl'), btw: sum('btw'), aftrek };
+    const incl = sum('incl');
+    return { aantal: rows.length, incl, btw: sum('btw'), gem: rows.length ? incl / rows.length : 0 };
   }, [rows]);
 
   const perMonth = useMemo(() => {
@@ -64,8 +64,8 @@ export default function OverzichtView() {
           <div className="kpi-grid">
             <div className="kpi"><div className="k-lab">Bonnen</div><div className="k-val">{kpi.aantal}</div></div>
             <div className="kpi"><div className="k-lab">Totaal incl.</div><div className="k-val">{fmtEur(kpi.incl)}</div></div>
-            <div className="kpi"><div className="k-lab">Btw totaal</div><div className="k-val">{fmtEur(kpi.btw)}</div></div>
-            <div className="kpi"><div className="k-lab">Aftrekbare btw</div><div className="k-val">{fmtEur(kpi.aftrek)}</div></div>
+            <div className="kpi"><div className="k-lab">Btw (kostprijs)</div><div className="k-val">{fmtEur(kpi.btw)}</div></div>
+            <div className="kpi"><div className="k-lab">Gem. per bon</div><div className="k-val">{fmtEur(kpi.gem)}</div></div>
           </div>
 
           <div className="card" style={{ marginTop: 16 }}>
@@ -76,13 +76,12 @@ export default function OverzichtView() {
           <div className="card tbl-wrap">
             <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 500, marginBottom: 4 }}>Per categorie</div>
             <table className="tbl">
-              <thead><tr><th>Categorie</th><th className="r">Aantal</th><th className="r">Excl.</th><th className="r">Btw</th><th className="r">Incl.</th><th>Aftrekbaar</th></tr></thead>
+              <thead><tr><th>Categorie</th><th className="r">Aantal</th><th className="r">Excl.</th><th className="r">Btw</th><th className="r">Incl.</th></tr></thead>
               <tbody>
                 {perCat.map(([c, v]) => (
                   <tr key={c}>
                     <td>{c}</td><td className="r">{v.aantal}</td><td className="r">{fmtEur(v.excl)}</td>
                     <td className="r">{fmtEur(v.btw)}</td><td className="r">{fmtEur(v.incl)}</td>
-                    <td><span className={`badge ${v.aftrekbaar === 'ja' ? 'ok' : v.aftrekbaar === 'nee' ? 'err' : 'warn'}`}>{v.aftrekbaar || '—'}</span></td>
                   </tr>
                 ))}
               </tbody>

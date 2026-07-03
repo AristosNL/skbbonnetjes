@@ -7,7 +7,7 @@ const { SYSTEM_PROMPT, RECEIPT_TOOL, enrich } = require('./_receiptConfig');
 const { verify } = require('./_auth');
 
 const MODEL = 'claude-sonnet-5'; // swap-baar; Sonnet is prima voor bonnen, Opus overkill
-const ALLOWED_MEDIA = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_MEDIA = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
 const CORS = {
   'Access-Control-Allow-Origin': '*', // zet in productie op je eigen domein
@@ -42,6 +42,10 @@ exports.handler = async (event) => {
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+    const mediaBlock = media_type === 'application/pdf'
+      ? { type: 'document', source: { type: 'base64', media_type, data: image_base64 } }
+      : { type: 'image', source: { type: 'base64', media_type, data: image_base64 } };
+
     const msg = await client.messages.create({
       model: MODEL,
       max_tokens: 1024,
@@ -52,7 +56,7 @@ exports.handler = async (event) => {
         {
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type, data: image_base64 } },
+            mediaBlock,
             { type: 'text', text: 'Lees deze bon uit en roep record_receipt aan.' },
           ],
         },

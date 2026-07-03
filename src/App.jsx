@@ -6,12 +6,14 @@ import ScanView from './views/ScanView.jsx';
 import OverzichtView from './views/OverzichtView.jsx';
 import BonnenView from './views/BonnenView.jsx';
 import ExportView from './views/ExportView.jsx';
+import AdminView from './views/AdminView.jsx';
 
 const NAV = [
   { id: 'scan', label: 'Scannen', icon: 'camera', view: ScanView },
   { id: 'overzicht', label: 'Overzicht', icon: 'chart', view: OverzichtView },
   { id: 'bonnen', label: 'Bonnetjes', icon: 'receipt', view: BonnenView },
   { id: 'export', label: 'Export', icon: 'download', view: ExportView },
+  { id: 'beheer', label: 'Beheer', icon: 'trash', view: AdminView },
 ];
 
 function Shell({ onLogout }) {

@@ -58,7 +58,7 @@ export default function BonnenView() {
           <table className="tbl">
             <thead><tr>
               <th>Datum</th><th>Leverancier</th><th>Categorie</th>
-              <th className="r">Excl.</th><th className="r">Btw</th><th className="r">Incl.</th><th>Aftrekbaar</th><th></th>
+              <th className="r">Excl.</th><th className="r">Btw</th><th className="r">Incl.</th><th></th>
             </tr></thead>
             <tbody>
               {rows.map((x, i) => (
@@ -69,7 +69,6 @@ export default function BonnenView() {
                   <td className="r">{fmtEur(x.excl)}</td>
                   <td className="r">{fmtEur(x.btw)}</td>
                   <td className="r">{fmtEur(x.incl)}</td>
-                  <td><span className={`badge ${x.aftrekbaar === 'ja' ? 'ok' : x.aftrekbaar === 'nee' ? 'err' : 'warn'}`}>{x.aftrekbaar || '—'}</span></td>
                   <td>{x.bon && <a href={x.bon} target="_blank" rel="noreferrer" title="Bon openen"><Icon name="ext" size={16} /></a>}</td>
                 </tr>
               ))}
