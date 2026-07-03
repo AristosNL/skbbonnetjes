@@ -9,14 +9,20 @@ const VAT_DEDUCTIBLE = false;
 
 // --- Categorieën (vaste lijst; LLM kiest hieruit, geen vrije tekst) ---
 const CATEGORIES = {
-  kantoorbenodigdheden:    {},
-  'software/abonnementen': {},
-  reiskosten:              {},
-  brandstof:               {},
-  horeca:                  {},
-  representatie:           {},
-  hardware:                {},
-  overig:                  {},
+  kantoorbenodigdheden:            {},
+  hardware:                        {},
+  'software/abonnementen':         {},
+  reiskosten:                      {},
+  brandstof:                       {},
+  horeca:                          {},
+  representatie:                   {},
+  'contributies & lidmaatschappen': {},
+  'nascholing & congressen':       {},
+  'accountancy & advies':          {},
+  verzekeringen:                   {},
+  'medische kosten':               {},
+  praktijkkosten:                  {},
+  overig:                          {},
 };
 
 // Aftrekbaarheid van de btw: bij een vrijgestelde bv altijd 'nee'.
@@ -35,7 +41,7 @@ Regels:
 - Staat er 0% of "vrijgesteld"? Gebruik tarief 0 met btw 0.
 - bedrag_excl_btw = som van alle grondslagen; btw_totaal = som van alle btw; bedrag_incl_btw = totaal dat de klant betaalde.
 - Leverancier = de winkel/het bedrijf dat de bon uitgaf (staat vaak bovenaan of in het logo).
-- Kies exact één categorie uit de toegestane lijst. Twijfel je? Kies "overig".
+- Kies exact één categorie uit de toegestane lijst. Aanwijzingen voor een medische praktijk: beroepsverenigingen/koepels (bv. KNMG, NVvH, wetenschappelijke verenigingen) = "contributies & lidmaatschappen"; cursussen, congressen, accreditatie/(her)registratie = "nascholing & congressen"; boekhouding, administratie, juridisch of consultancy = "accountancy & advies"; beroepsaansprakelijkheid en bedrijfsverzekeringen = "verzekeringen"; medische benodigdheden/materialen = "medische kosten"; ziekenhuis-, maatschap- of praktijkgebonden kosten = "praktijkkosten". Twijfel je? Kies "overig".
 - Verzin niets. Kun je een veld niet lezen, geef je beste schatting en zet leesbaarheid op "matig" of "slecht".`;
 
 // --- Tool-schema (dwingt gestructureerde output af) ---

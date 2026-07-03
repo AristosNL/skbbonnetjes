@@ -23,6 +23,8 @@ Foto van een bon → Claude leest leverancier, datum, btw en categorie uit → a
 | `/logout` | POST | wist de cookie |
 | `/me` | GET | 200 = ingelogd, 401 = niet |
 | `/list-receipts` | GET | → `{receipts:[…]}` (voor Overzicht en Bonnetjes) |
+| `/delete-receipt` | POST | `{datum, leverancier, incl}` → verwijdert rij + trasht Drive-bestand |
+| `/update-category` | POST | `{datum, leverancier, incl, categorie}` → herrubriceert een bon |
 | `/extract-receipt` | POST | `{image_base64, media_type}` → gevalideerde bon-JSON (401 zonder cookie) |
 | `/save-receipt` | POST | `{data, image_base64, media_type}` → `{bon_link, sheet_id}` (401 zonder cookie) |
 | `/export-xlsx?year=2026` | GET | → `.xlsx`-download (401 zonder cookie) |

@@ -109,4 +109,25 @@ async function resetAll(drive) {
   return { folders, sheets: sheetsN };
 }
 
-module.exports = { clients, ensureFolderPath, uploadImage, ensureSheet, appendRow, readSheet, resetAll };
+// Verwijdert rij `rowNumber` (1-indexed, sheet-rijnummer incl. header) uit tabblad 0.
+async function deleteRow(sheets, sheetId, rowNumber) {
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: sheetId,
+    requestBody: {
+      requests: [{
+        deleteDimension: {
+          range: { sheetId: 0, dimension: 'ROWS', startIndex: rowNumber - 1, endIndex: rowNumber },
+        },
+      }],
+    },
+  });
+}
+
+async function trashFileByUrl(drive, url) {
+  const m = String(url || '').match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (!m) return false;
+  await drive.files.update({ fileId: m[1], requestBody: { trashed: true } });
+  return true;
+}
+
+module.exports = { clients, ensureFolderPath, uploadImage, ensureSheet, appendRow, readSheet, resetAll, deleteRow, trashFileByUrl };

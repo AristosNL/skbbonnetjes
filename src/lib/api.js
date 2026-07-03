@@ -17,6 +17,8 @@ export const logout = () => fetch(F('logout'), { method: 'POST' });
 export const checkAuth = () => fetch(F('me')).then((r) => r.ok);
 export const exportUrl = (year) => F(`export-xlsx?year=${year}`);
 export const resetData = () => post('reset-data', { confirm: 'VERWIJDER' });
+export const deleteReceipt = (datum, leverancier, incl) => post('delete-receipt', { datum, leverancier, incl });
+export const updateCategory = (datum, leverancier, incl, categorie) => post('update-category', { datum, leverancier, incl, categorie });
 
 let _cache = null;
 export async function getReceipts(force = false) {
@@ -68,12 +70,18 @@ export async function filePayload(file) {
 
 export const CATEGORIES = {
   kantoorbenodigdheden: null,
+  hardware: null,
   'software/abonnementen': null,
   reiskosten: null,
   brandstof: null,
   horeca: null,
   representatie: null,
-  hardware: null,
+  'contributies & lidmaatschappen': null,
+  'nascholing & congressen': null,
+  'accountancy & advies': null,
+  verzekeringen: null,
+  'medische kosten': null,
+  praktijkkosten: null,
   overig: null,
 };
 // Vrijgestelde bv: voorbelasting niet aftrekbaar (btw = kostprijs).
