@@ -23,7 +23,7 @@ function Shell({ onLogout }) {
     <div className="app">
       <aside className="sidebar">
         <div className="brand">
-          <span className="brand-glyph"><Icon name="receipt" size={20} /></span>
+          <img src="/icon-192.png" alt="" className="brand-glyph" />
           <div><div className="brand-name">Bonnetjes</div><div className="brand-sub">uitgaven &amp; btw</div></div>
         </div>
         <nav className="nav">

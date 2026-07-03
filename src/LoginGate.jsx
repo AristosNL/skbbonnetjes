@@ -27,7 +27,7 @@ export default function LoginGate({ children }) {
       <div className="login-wrap">
         <form className="login-card" onSubmit={doLogin}>
           <div className="login-brand">
-            <span className="brand-glyph"><Icon name="receipt" size={20} /></span>
+            <img src="/icon-192.png" alt="" className="brand-glyph" />
             <h1 className="login-title">Bonnetjes</h1>
           </div>
           {error && <div className="alert err">{error}</div>}
