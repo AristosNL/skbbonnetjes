@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { getReceipts, fmtEur, MONTHS, MONTHS_SHORT, parseDatum, AFTREK_TXT } from '../lib/api.js';
+import { getReceipts, fmtEur, MONTHS, MONTHS_SHORT, parseDatum } from '../lib/api.js';
 
 export default function OverzichtView() {
   const [receipts, setReceipts] = useState(null);

@@ -18,7 +18,7 @@ export const checkAuth = () => fetch(F('me')).then((r) => r.ok);
 export const exportUrl = (year) => F(`export-xlsx?year=${year}`);
 export const resetData = () => post('reset-data', { confirm: 'VERWIJDER' });
 export const deleteReceipt = (datum, leverancier, incl) => post('delete-receipt', { datum, leverancier, incl });
-export const updateCategory = (datum, leverancier, incl, categorie) => post('update-category', { datum, leverancier, incl, categorie });
+export const updateReceipt = (match, patch) => post('update-receipt', { match, patch });
 
 let _cache = null;
 export async function getReceipts(force = false) {
